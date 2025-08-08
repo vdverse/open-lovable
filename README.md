@@ -1,6 +1,8 @@
-# E2B AI Code Editor
+# Open Lovable
 
 Chat with AI to build React apps instantly.
+
+![Open Lovable Demo](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmZtaHFleGRsMTNlaWNydGdianI4NGQ4dHhyZjB0d2VkcjRyeXBucCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ZFVLWMa6dVskQX0qu1/giphy.gif)
 
 ## Setup
 
@@ -14,13 +16,13 @@ npm install
 2. **Add `.env.local`**
 ```env
 # Required
-E2B_API_KEY=your_e2b_api_key
-FIRECRAWL_API_KEY=your_firecrawl_api_key
+E2B_API_KEY=your_e2b_api_key  # Get from https://e2b.dev (Sandboxes)
+FIRECRAWL_API_KEY=your_firecrawl_api_key  # Get from https://firecrawl.dev (Web scraping)
 
 # Optional (need at least one AI provider)
-ANTHROPIC_API_KEY=your_anthropic_api_key
-OPENAI_API_KEY=your_openai_api_key
-GROQ_API_KEY=your_groq_api_key
+ANTHROPIC_API_KEY=your_anthropic_api_key  # Get from https://console.anthropic.com
+OPENAI_API_KEY=your_openai_api_key  # Get from https://platform.openai.com (GPT-5)
+GROQ_API_KEY=your_groq_api_key  # Get from https://console.groq.com (Fast inference - Kimi K2 recommended)
 ```
 
 3. **Run**
@@ -28,38 +30,7 @@ GROQ_API_KEY=your_groq_api_key
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000)
-
-## Get API Keys
-
-[firecrawl.dev](https://firecrawl.dev) → Web scraping  
-[e2b.dev](https://e2b.dev) → Sandboxes  
-[console.groq.com](https://console.groq.com) → Fast inference (Kimi K2 - recommended)  
-[platform.openai.com](https://platform.openai.com) → GPT-5  
-
-## Example Chat
-
-```
-You: "Clone the Stripe pricing page"
-AI: *generates full pricing component*
-
-You: "Make it dark mode"  
-AI: *adds theme switching*
-
-You: "Add animations"
-AI: *implements Framer Motion*
-
-You: "Deploy this"
-AI: *guides deployment*
-```
-
-## Features
-
-- Live preview with hot reload
-- Automatic package installation
-- Multiple AI models
-- Web scraping with Firecrawl
-- Sandboxed execution
+Open [http://localhost:3000](http://localhost:3000)  
 
 ## License
 
