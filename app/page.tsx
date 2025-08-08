@@ -298,7 +298,10 @@ export default function AISandboxPage() {
               
               switch (data.type) {
                 case 'command':
-                  addChatMessage(data.command, 'command', { commandType: 'input' });
+                  // Don't show npm install commands - they're handled by info messages
+                  if (!data.command.includes('npm install')) {
+                    addChatMessage(data.command, 'command', { commandType: 'input' });
+                  }
                   break;
                 case 'output':
                   addChatMessage(data.message, 'command', { commandType: 'output' });
@@ -529,7 +532,8 @@ Tip: I automatically detect and install npm packages from your code imports (lik
                   break;
                   
                 case 'command':
-                  if (data.command) {
+                  // Don't show npm install commands - they're handled by info messages
+                  if (data.command && !data.command.includes('npm install')) {
                     addChatMessage(data.command, 'command', { commandType: 'input' });
                   }
                   break;
@@ -584,6 +588,13 @@ Tip: I automatically detect and install npm packages from your code imports (lik
                   
                 case 'warning':
                   addChatMessage(`${data.message}`, 'system');
+                  break;
+                  
+                case 'info':
+                  // Show info messages, especially for package installation
+                  if (data.message) {
+                    addChatMessage(data.message, 'system');
+                  }
                   break;
               }
             } catch (e) {
@@ -3270,7 +3281,7 @@ Focus on the key sections and content, making it clean and modern.`;
 
         {/* Right Panel - Preview or Generation (2/3 of remaining width) */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-2 bg-card border-b border-border flex justify-between items-center">
+          <div className="px-4 py-2 bg-card border-b border-border flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div className="flex bg-[#36322F] rounded-lg p-1">
                 <button

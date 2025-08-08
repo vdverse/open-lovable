@@ -67,7 +67,7 @@ export const appConfig = {
     packageInstallRefreshDelay: 5000,
     
     // Enable/disable automatic truncation recovery
-    enableTruncationRecovery: true,
+    enableTruncationRecovery: false, // Disabled - too many false positives
     
     // Maximum number of truncation recovery attempts per file
     maxTruncationRecoveryAttempts: 1,

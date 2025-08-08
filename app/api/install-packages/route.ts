@@ -183,10 +183,10 @@ except Exception as e:
         
         // Install only packages that aren't already installed
         const packageList = packagesToInstall.join(' ');
+        // Only send the npm install command message if we're actually installing new packages
         await sendProgress({ 
-          type: 'command', 
-          command: `npm install ${packageList}`,
-          message: `Installing ${packagesToInstall.length} new package(s)...` 
+          type: 'info', 
+          message: `Installing ${packagesToInstall.length} new package(s): ${packagesToInstall.join(', ')}`
         });
         
         const installResult = await sandboxInstance.runCode(`
