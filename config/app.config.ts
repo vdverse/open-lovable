@@ -28,24 +28,20 @@ export const appConfig = {
   // AI Model Configuration
   ai: {
     // Default AI model
-    defaultModel: 'openai/gpt-5-nano',
+    defaultModel: 'moonshotai/kimi-k2-instruct',
     
     // Available models
     availableModels: [
-      'openai/gpt-5-nano',
-      'openai/gpt-5-mini', 
       'openai/gpt-5',
       'moonshotai/kimi-k2-instruct',
-      'anthropic/claude-3-5-sonnet-20241022'
+      'anthropic/claude-sonnet-4-20250514'
     ],
     
     // Model display names
     modelDisplayNames: {
-      'openai/gpt-5-nano': 'GPT-5 Nano',
-      'openai/gpt-5-mini': 'GPT-5 Mini',
       'openai/gpt-5': 'GPT-5',
       'moonshotai/kimi-k2-instruct': 'Kimi K2 Instruct',
-      'anthropic/claude-3-5-sonnet-20241022': 'Claude 3.5 Sonnet'
+      'anthropic/claude-sonnet-4-20250514': 'Sonnet 4'
     },
     
     // Temperature settings for non-reasoning models

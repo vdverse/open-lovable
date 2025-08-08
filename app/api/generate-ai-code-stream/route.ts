@@ -1151,9 +1151,7 @@ CRITICAL: When files are provided in the context:
         const isOpenAI = model.startsWith('openai/gpt-5');
         const modelProvider = isAnthropic ? anthropic : (isOpenAI ? openai : groq);
         const actualModel = isAnthropic ? model.replace('anthropic/', '') : 
-                           (model === 'openai/gpt-5') ? 'gpt-5' :
-                           (model === 'openai/gpt-5-nano') ? 'gpt-5-nano' :
-                           (model === 'openai/gpt-5-mini') ? 'gpt-5-mini' : model;
+                           (model === 'openai/gpt-5') ? 'gpt-5' : model;
         
         // Make streaming API call with appropriate provider
         const streamOptions: any = {
@@ -1231,14 +1229,9 @@ It's better to have 3 complete files than 10 incomplete files.`
         
         // Add reasoning effort for GPT-5 models
         if (isOpenAI) {
-          let reasoningEffort = 'medium'; // default for gpt-5-nano and gpt-5-mini
-          if (model === 'openai/gpt-5') {
-            reasoningEffort = 'high';
-          }
-          
           streamOptions.experimental_providerMetadata = {
             openai: {
-              reasoningEffort: reasoningEffort
+              reasoningEffort: 'high'
             }
           };
         }

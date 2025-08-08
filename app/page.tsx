@@ -3247,6 +3247,48 @@ Focus on the key sections and content, making it clean and modern.`;
                     </div>
                   )}
                 </div>
+                
+                {/* Live streaming response display */}
+                {generationProgress.streamedCode && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-3 border-t border-gray-300 pt-3"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span className="text-xs font-medium text-gray-600">AI Response Stream</span>
+                      </div>
+                      <div className="flex-1 h-px bg-gradient-to-r from-gray-300 to-transparent" />
+                    </div>
+                    <div className="bg-gray-900 border border-gray-700 rounded max-h-32 overflow-y-auto scrollbar-hide">
+                      <SyntaxHighlighter
+                        language="jsx"
+                        style={vscDarkPlus}
+                        customStyle={{
+                          margin: 0,
+                          padding: '0.75rem',
+                          fontSize: '11px',
+                          lineHeight: '1.5',
+                          background: 'transparent',
+                          maxHeight: '8rem',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {(() => {
+                          const lastContent = generationProgress.streamedCode.slice(-1000);
+                          // Show the last part of the stream, starting from a complete tag if possible
+                          const startIndex = lastContent.indexOf('<');
+                          return startIndex !== -1 ? lastContent.slice(startIndex) : lastContent;
+                        })()}
+                      </SyntaxHighlighter>
+                      <span className="inline-block w-2 h-3 bg-orange-400 ml-3 mb-3 animate-pulse" />
+                    </div>
+                  </motion.div>
+                )}
               </div>
             )}
           </div>
