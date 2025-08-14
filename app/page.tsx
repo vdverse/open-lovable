@@ -136,6 +136,8 @@ export default function AISandboxPage() {
 
   // Clear old conversation data on component mount and create/restore sandbox
   useEffect(() => {
+    let isMounted = true;
+
     const initializePage = async () => {
       // Clear old conversation
       try {
@@ -147,32 +149,44 @@ export default function AISandboxPage() {
         console.log('[home] Cleared old conversation data on mount');
       } catch (error) {
         console.error('[ai-sandbox] Failed to clear old conversation:', error);
+        if (isMounted) {
+          addChatMessage('Failed to clear old conversation data.', 'error');
+        }
       }
       
+      if (!isMounted) return;
+
       // Check if sandbox ID is in URL
       const sandboxIdParam = searchParams.get('sandbox');
       
-      if (sandboxIdParam) {
-        // Try to restore existing sandbox
-        console.log('[home] Attempting to restore sandbox:', sandboxIdParam);
-        setLoading(true);
-        try {
+      setLoading(true);
+      try {
+        if (sandboxIdParam) {
+          console.log('[home] Attempting to restore sandbox:', sandboxIdParam);
           // For now, just create a new sandbox - you could enhance this to actually restore
           // the specific sandbox if your backend supports it
           await createSandbox(true);
-        } catch (error) {
-          console.error('[ai-sandbox] Failed to restore sandbox:', error);
-          // Create new sandbox on error
+        } else {
+          console.log('[home] No sandbox in URL, creating new sandbox automatically...');
           await createSandbox(true);
         }
-      } else {
-        // Automatically create new sandbox
-        console.log('[home] No sandbox in URL, creating new sandbox automatically...');
-        await createSandbox(true);
+      } catch (error) {
+        console.error('[ai-sandbox] Failed to create or restore sandbox:', error);
+        if (isMounted) {
+          addChatMessage('Failed to create or restore sandbox.', 'error');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
     
     initializePage();
+
+    return () => {
+      isMounted = false;
+    };
   }, []); // Run only on mount
   
   useEffect(() => {
