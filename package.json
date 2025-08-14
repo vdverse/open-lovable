@@ -30,7 +30,6 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "e2b": "^1.13.2",
-    "express": "^5.1.0",
     "framer-motion": "^12.23.12",
     "groq-sdk": "^0.29.0",
     "lucide-react": "^0.532.0",
