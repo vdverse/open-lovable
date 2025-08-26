@@ -35,13 +35,29 @@ export async function POST() {
       global.existingFiles = new Set<string>();
     }
 
-    // Create Vercel sandbox
+    // Create Vercel sandbox with flexible authentication
     console.log(`[create-ai-sandbox] Creating Vercel sandbox with ${appConfig.vercelSandbox.timeoutMinutes} minute timeout...`);
-    sandbox = await Sandbox.create({
+    
+    // Prepare sandbox configuration
+    const sandboxConfig: any = {
       timeout: appConfig.vercelSandbox.timeoutMs,
       runtime: appConfig.vercelSandbox.runtime,
       ports: [appConfig.vercelSandbox.devPort]
-    });
+    };
+    
+    // Add authentication parameters if using personal access token
+    if (process.env.VERCEL_TOKEN && process.env.VERCEL_TEAM_ID && process.env.VERCEL_PROJECT_ID) {
+      console.log('[create-ai-sandbox] Using personal access token authentication');
+      sandboxConfig.teamId = process.env.VERCEL_TEAM_ID;
+      sandboxConfig.projectId = process.env.VERCEL_PROJECT_ID;
+      sandboxConfig.token = process.env.VERCEL_TOKEN;
+    } else if (process.env.VERCEL_OIDC_TOKEN) {
+      console.log('[create-ai-sandbox] Using OIDC token authentication');
+    } else {
+      console.log('[create-ai-sandbox] No authentication found - relying on default Vercel authentication');
+    }
+    
+    sandbox = await Sandbox.create(sandboxConfig);
     
     const sandboxId = sandbox.sandboxId;
     console.log(`[create-ai-sandbox] Sandbox created: ${sandboxId}`);

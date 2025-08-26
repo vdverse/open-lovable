@@ -16,10 +16,22 @@ npm install
 ```
 
 2. **Add `.env.local`**
+
 ```env
 # Required
-VERCEL_TEAM_ID=your_team_id  # Your Vercel team ID for sandbox access
 FIRECRAWL_API_KEY=your_firecrawl_api_key  # Get from https://firecrawl.dev (Web scraping)
+
+# Vercel Sandbox Authentication (choose one method)
+# See: https://vercel.com/docs/vercel-sandbox#authentication
+
+# Method 1: OIDC Token (recommended for development)
+# Run `vercel link` then `vercel env pull` to get VERCEL_OIDC_TOKEN automatically
+# VERCEL_OIDC_TOKEN=auto_generated_by_vercel_env_pull
+
+# Method 2: Personal Access Token (for production or when OIDC unavailable)
+# VERCEL_TEAM_ID=team_xxxxxxxxx      # Your Vercel team ID 
+# VERCEL_PROJECT_ID=prj_xxxxxxxxx    # Your Vercel project ID
+# VERCEL_TOKEN=vercel_xxxxxxxxxxxx   # Personal access token from Vercel dashboard
 
 # Optional (need at least one AI provider)
 ANTHROPIC_API_KEY=your_anthropic_api_key  # Get from https://console.anthropic.com
