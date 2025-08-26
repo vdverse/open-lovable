@@ -22,9 +22,10 @@ export default function SandboxPreview({
 
   useEffect(() => {
     if (sandboxId && type !== 'console') {
-      // In production, this would be the actual E2B sandbox URL
-      // Format: https://{sandboxId}-{port}.e2b.dev
-      setPreviewUrl(`https://${sandboxId}-${port}.e2b.dev`);
+      // For Vercel Sandbox, we'll receive the full URL from the API
+      // The URL format is determined by Vercel Sandbox's domain() method
+      // This is just a fallback format - actual URL comes from sandbox.domain(port)
+      setPreviewUrl(`https://${sandboxId}.vercel-sandbox.dev`);
     }
   }, [sandboxId, port, type]);
 

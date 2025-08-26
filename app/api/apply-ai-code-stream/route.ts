@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Sandbox } from '@e2b/code-interpreter';
+import { Sandbox } from '@vercel/sandbox';
 import type { SandboxState } from '@/types/sandbox';
 import type { ConversationState } from '@/types/conversation';
 
@@ -525,7 +525,6 @@ export async function POST(request: NextRequest) {
               normalizedPath = 'src/' + normalizedPath;
             }
             
-            const fullPath = `/home/user/app/${normalizedPath}`;
             const isUpdate = global.existingFiles.has(normalizedPath);
             
             // Remove any CSS imports from JSX/JS files (we're using Tailwind)
@@ -534,19 +533,20 @@ export async function POST(request: NextRequest) {
               fileContent = fileContent.replace(/import\s+['"]\.\/[^'"]+\.css['"];?\s*\n?/g, '');
             }
             
-            // Write the file using Python (code-interpreter SDK)
-            const escapedContent = fileContent
-              .replace(/\\/g, '\\\\')
-              .replace(/"""/g, '\\"\\"\\"')
-              .replace(/\$/g, '\\$');
+            // Create directory if needed
+            const dirPath = normalizedPath.includes('/') ? normalizedPath.substring(0, normalizedPath.lastIndexOf('/')) : '';
+            if (dirPath) {
+              await sandboxInstance.runCommand({
+                cmd: 'mkdir',
+                args: ['-p', dirPath]
+              });
+            }
             
-            await sandboxInstance.runCode(`
-import os
-os.makedirs(os.path.dirname("${fullPath}"), exist_ok=True)
-with open("${fullPath}", 'w') as f:
-    f.write("""${escapedContent}""")
-print(f"File written: ${fullPath}")
-            `);
+            // Write the file using Vercel Sandbox writeFiles
+            await sandboxInstance.writeFiles([{
+              path: normalizedPath,
+              content: Buffer.from(fileContent)
+            }]);
             
             // Update file cache
             if (global.sandboxState?.fileCache) {
@@ -599,27 +599,38 @@ print(f"File written: ${fullPath}")
                 action: 'executing'
               });
               
-              // Use E2B commands.run() for cleaner execution
-              const result = await sandboxInstance.commands.run(cmd, {
-                cwd: '/home/user/app',
-                timeout: 60,
-                on_stdout: async (data: string) => {
-                  await sendProgress({
-                    type: 'command-output',
-                    command: cmd,
-                    output: data,
-                    stream: 'stdout'
-                  });
-                },
-                on_stderr: async (data: string) => {
-                  await sendProgress({
-                    type: 'command-output',
-                    command: cmd,
-                    output: data,
-                    stream: 'stderr'
-                  });
-                }
+              // Parse command and arguments for Vercel Sandbox
+              const commandParts = cmd.trim().split(/\s+/);
+              const cmdName = commandParts[0];
+              const args = commandParts.slice(1);
+              
+              // Use Vercel Sandbox runCommand
+              const result = await sandboxInstance.runCommand({
+                cmd: cmdName,
+                args
               });
+              
+              // Get command output
+              const stdout = await result.stdout();
+              const stderr = await result.stderr();
+              
+              if (stdout) {
+                await sendProgress({
+                  type: 'command-output',
+                  command: cmd,
+                  output: stdout,
+                  stream: 'stdout'
+                });
+              }
+              
+              if (stderr) {
+                await sendProgress({
+                  type: 'command-output',
+                  command: cmd,
+                  output: stderr,
+                  stream: 'stderr'
+                });
+              }
               
               if (results.commandsExecuted) {
                 results.commandsExecuted.push(cmd);

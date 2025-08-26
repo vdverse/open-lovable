@@ -18,7 +18,7 @@ npm install
 2. **Add `.env.local`**
 ```env
 # Required
-E2B_API_KEY=your_e2b_api_key  # Get from https://e2b.dev (Sandboxes)
+VERCEL_TEAM_ID=your_team_id  # Your Vercel team ID for sandbox access
 FIRECRAWL_API_KEY=your_firecrawl_api_key  # Get from https://firecrawl.dev (Web scraping)
 
 # Optional (need at least one AI provider)
