@@ -8,18 +8,18 @@ declare global {
 
 export async function POST() {
   try {
-    console.log('[kill-sandbox] Killing active sandbox...');
+    console.log('[kill-sandbox] Stopping active sandbox...');
     
     let sandboxKilled = false;
     
-    // Kill existing sandbox if any
+    // Stop existing sandbox if any
     if (global.activeSandbox) {
       try {
-        await global.activeSandbox.close();
+        await global.activeSandbox.stop();
         sandboxKilled = true;
-        console.log('[kill-sandbox] Sandbox closed successfully');
+        console.log('[kill-sandbox] Sandbox stopped successfully');
       } catch (e) {
-        console.error('[kill-sandbox] Failed to close sandbox:', e);
+        console.error('[kill-sandbox] Failed to stop sandbox:', e);
       }
       global.activeSandbox = null;
       global.sandboxData = null;

@@ -2,27 +2,30 @@
 // This file contains all configurable settings for the application
 
 export const appConfig = {
-  // E2B Sandbox Configuration
-  e2b: {
+  // Vercel Sandbox Configuration
+  vercelSandbox: {
     // Sandbox timeout in minutes
     timeoutMinutes: 15,
     
-    // Convert to milliseconds for E2B API
+    // Convert to milliseconds for Vercel Sandbox API
     get timeoutMs() {
       return this.timeoutMinutes * 60 * 1000;
     },
     
-    // Vite development server port
-    vitePort: 5173,
+    // Development server port (Vercel Sandbox typically uses 3000 for Next.js/React)
+    devPort: 3000,
     
-    // Time to wait for Vite to be ready (in milliseconds)
-    viteStartupDelay: 7000,
+    // Time to wait for dev server to be ready (in milliseconds)
+    devServerStartupDelay: 7000,
     
     // Time to wait for CSS rebuild (in milliseconds)
     cssRebuildDelay: 2000,
     
-    // Default sandbox template (if using templates)
-    defaultTemplate: undefined, // or specify a template ID
+    // Working directory in sandbox
+    workingDirectory: '/app',
+    
+    // Default runtime for sandbox
+    runtime: 'node22' // Available: node22, python3.13, v0-next-shadcn, cua-ubuntu-xfce
   },
   
   // AI Model Configuration
@@ -35,7 +38,7 @@ export const appConfig = {
       'openai/gpt-5',
       'moonshotai/kimi-k2-instruct',
       'anthropic/claude-sonnet-4-20250514',
-      'google/gemini-2.5-pro'
+      'google/gemini-2.0-flash-exp'
     ],
     
     // Model display names
@@ -43,7 +46,7 @@ export const appConfig = {
       'openai/gpt-5': 'GPT-5',
       'moonshotai/kimi-k2-instruct': 'Kimi K2 Instruct',
       'anthropic/claude-sonnet-4-20250514': 'Sonnet 4',
-      'google/gemini-2.5-pro': 'Gemini 2.5 Pro'
+      'google/gemini-2.0-flash-exp': 'Gemini 2.0 Flash (Experimental)'
     },
     
     // Temperature settings for non-reasoning models

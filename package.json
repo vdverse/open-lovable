@@ -8,7 +8,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:integration": "node tests/e2b-integration.test.js",
     "test:api": "node tests/api-endpoints.test.js",
     "test:code": "node tests/code-execution.test.js",
     "test:all": "npm run test:integration && npm run test:api && npm run test:code"
@@ -19,7 +18,7 @@
     "@ai-sdk/groq": "^2.0.0",
     "@ai-sdk/openai": "^2.0.4",
     "@anthropic-ai/sdk": "^0.57.0",
-    "@e2b/code-interpreter": "^1.5.1",
+    "@vercel/sandbox": "^0.0.17",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@types/react-syntax-highlighter": "^15.5.13",
@@ -29,7 +28,7 @@
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
-    "e2b": "^1.13.2",
+
     "framer-motion": "^12.23.12",
     "groq-sdk": "^0.29.0",
     "lucide-react": "^0.532.0",
