@@ -11,9 +11,6 @@ import { FileManifest } from '@/types/file-manifest';
 import type { ConversationState, ConversationMessage, ConversationEdit } from '@/types/conversation';
 import { appConfig } from '@/config/app.config';
 
-// Force dynamic route to enable streaming
-export const dynamic = 'force-dynamic';
-
 const groq = createGroq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -1159,21 +1156,9 @@ CRITICAL: When files are provided in the context:
         const isGoogle = model.startsWith('google/');
         const isOpenAI = model.startsWith('openai/gpt-5');
         const modelProvider = isAnthropic ? anthropic : (isOpenAI ? openai : (isGoogle ? googleGenerativeAI : groq));
-        
-        // Fix model name transformation for different providers
-        let actualModel: string;
-        if (isAnthropic) {
-          actualModel = model.replace('anthropic/', '');
-        } else if (model === 'openai/gpt-5') {
-          actualModel = 'gpt-5';
-        } else if (isGoogle) {
-          // Google uses specific model names - convert our naming to theirs  
-          actualModel = model.replace('google/', '');
-        } else {
-          actualModel = model;
-        }
-
-        console.log(`[generate-ai-code-stream] Using provider: ${isAnthropic ? 'Anthropic' : isGoogle ? 'Google' : isOpenAI ? 'OpenAI' : 'Groq'}, model: ${actualModel}`);
+        const actualModel = isAnthropic ? model.replace('anthropic/', '') : 
+                           (model === 'openai/gpt-5') ? 'gpt-5' :
+                           (isGoogle ? model.replace('google/', '') : model);
 
         // Make streaming API call with appropriate provider
         const streamOptions: any = {
@@ -1258,28 +1243,7 @@ It's better to have 3 complete files than 10 incomplete files.`
           };
         }
         
-        let result;
-        try {
-          result = await streamText(streamOptions);
-        } catch (streamError) {
-          console.error('[generate-ai-code-stream] Error calling streamText:', streamError);
-          
-          // Send specific error for debugging
-          await sendProgress({ 
-            type: 'error', 
-            message: `Failed to initialize ${isGoogle ? 'Gemini' : isAnthropic ? 'Claude' : isOpenAI ? 'GPT-5' : 'Groq'} streaming: ${(streamError as Error).message}` 
-          });
-          
-          // If this is a Google model error, provide helpful info
-          if (isGoogle) {
-            await sendProgress({ 
-              type: 'info', 
-              message: 'Tip: Make sure your GEMINI_API_KEY is set correctly and has proper permissions.' 
-            });
-          }
-          
-          throw streamError;
-        }
+        const result = await streamText(streamOptions);
         
         // Stream the response and parse in real-time
         let generatedCode = '';
@@ -1751,18 +1715,12 @@ Provide the complete file content without any truncation. Include all necessary 
       }
     })();
     
-    // Return the stream with proper headers for streaming support
+    // Return the stream
     return new Response(stream.readable, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'Transfer-Encoding': 'chunked',
-        'Content-Encoding': 'none', // Prevent compression that can break streaming
-        'X-Accel-Buffering': 'no', // Disable nginx buffering
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       },
     });
     

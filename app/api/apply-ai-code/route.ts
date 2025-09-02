@@ -432,12 +432,15 @@ function App() {
 export default App;`;
       
       try {
-        await global.activeSandbox.writeFiles([{
-          path: 'src/App.jsx',
-          content: Buffer.from(appContent)
-        }]);
-        
-        console.log('Auto-generated: src/App.jsx');
+        await global.activeSandbox.runCode(`
+file_path = "/home/user/app/src/App.jsx"
+file_content = """${appContent.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"""
+
+with open(file_path, 'w') as f:
+    f.write(file_content)
+
+print(f"Auto-generated: {file_path}")
+        `);
         results.filesCreated.push('src/App.jsx (auto-generated)');
       } catch (error) {
         results.errors.push(`Failed to create App.jsx: ${(error as Error).message}`);
@@ -456,7 +459,9 @@ export default App;`;
       
       if (!isEdit && !indexCssInParsed && !indexCssExists) {
         try {
-          const indexCssContent = `@tailwind base;
+          await global.activeSandbox.runCode(`
+file_path = "/home/user/app/src/index.css"
+file_content = """@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -478,14 +483,13 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-}`;
+}"""
 
-          await global.activeSandbox.writeFiles([{
-            path: 'src/index.css',
-            content: Buffer.from(indexCssContent)
-          }]);
-          
-          console.log('Auto-generated: src/index.css');
+with open(file_path, 'w') as f:
+    f.write(file_content)
+
+print(f"Auto-generated: {file_path}")
+          `);
           results.filesCreated.push('src/index.css (with Tailwind)');
         } catch (error) {
           results.errors.push('Failed to create index.css with Tailwind');
@@ -496,24 +500,15 @@ body {
     // Execute commands
     for (const cmd of parsed.commands) {
       try {
-        // Parse command and arguments
-        const commandParts = cmd.trim().split(/\s+/);
-        const cmdName = commandParts[0];
-        const args = commandParts.slice(1);
-        
-        // Execute command using Vercel Sandbox
-        const result = await global.activeSandbox.runCommand({
-          cmd: cmdName,
-          args
-        });
-        
-        console.log(`Executed: ${cmd}`);
-        const stdout = await result.stdout();
-        const stderr = await result.stderr();
-        
-        if (stdout) console.log(stdout);
-        if (stderr) console.log(`Errors: ${stderr}`);
-        
+        await global.activeSandbox.runCode(`
+import subprocess
+os.chdir('/home/user/app')
+result = subprocess.run(${JSON.stringify(cmd.split(' '))}, capture_output=True, text=True)
+print(f"Executed: ${cmd}")
+print(result.stdout)
+if result.stderr:
+    print(f"Errors: {result.stderr}")
+        `);
         results.commandsExecuted.push(cmd);
       } catch (error) {
         results.errors.push(`Failed to execute ${cmd}: ${(error as Error).message}`);

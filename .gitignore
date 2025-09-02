@@ -56,4 +56,3 @@ e2b-template-*
 *.temp
 repomix-output.txt
 bun.lockb
-.env*.local
