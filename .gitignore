@@ -34,7 +34,6 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 .env.local
-!.env.example
 
 # vercel
 .vercel
@@ -57,3 +56,4 @@ e2b-template-*
 repomix-output.txt
 bun.lockb
 .env.*
+!.env.example
