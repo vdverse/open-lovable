@@ -345,7 +345,7 @@ export async function POST(request: NextRequest) {
           
           // Update file cache
           if (global.sandboxState?.fileCache) {
-            global.sandboxState.fileCache.files[normalizedPath] = {
+            global.sandboxState.fileCache!.files[normalizedPath] = {
               content: fileContent,
               lastModified: Date.now()
             };

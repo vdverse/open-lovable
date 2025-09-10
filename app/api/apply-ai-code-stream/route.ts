@@ -550,7 +550,7 @@ print(f"File written: ${fullPath}")
             
             // Update file cache
             if (global.sandboxState?.fileCache) {
-              global.sandboxState.fileCache.files[normalizedPath] = {
+              global.sandboxState.fileCache!.files[normalizedPath] = {
                 content: fileContent,
                 lastModified: Date.now()
               };

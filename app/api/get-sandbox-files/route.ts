@@ -127,7 +127,7 @@ print(json.dumps(result))
     
     // Update global file cache with manifest
     if (global.sandboxState?.fileCache) {
-      global.sandboxState.fileCache.manifest = fileManifest;
+      global.sandboxState.fileCache!.manifest = fileManifest;
     }
 
     return NextResponse.json({
