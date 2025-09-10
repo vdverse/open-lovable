@@ -28,6 +28,81 @@ const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Helper function to chunk large content for token limits
+function chunkContent(content: string, maxTokens: number = 8000): string[] {
+  const words = content.split(' ');
+  const chunks = [];
+  let currentChunk = '';
+  
+  for (const word of words) {
+    const testChunk = currentChunk + (currentChunk ? ' ' : '') + word;
+    // Rough estimation: 1 token ≈ 4 characters
+    if (testChunk.length > maxTokens * 4) {
+      if (currentChunk) {
+        chunks.push(currentChunk);
+        currentChunk = word;
+      } else {
+        // Single word is too long, truncate it
+        chunks.push(word.substring(0, maxTokens * 4));
+      }
+    } else {
+      currentChunk = testChunk;
+    }
+  }
+  
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+  
+  return chunks;
+}
+
+// Helper function to extract key sections from scraped content
+function extractKeySections(content: string): string[] {
+  const sections = [];
+  
+  // Extract title and description
+  const titleMatch = content.match(/Title:\s*(.+?)(?:\n|$)/);
+  if (titleMatch) sections.push(`Title: ${titleMatch[1]}`);
+  
+  const descMatch = content.match(/Description:\s*(.+?)(?:\n|$)/);
+  if (descMatch) sections.push(`Description: ${descMatch[1]}`);
+  
+  // Extract main heading
+  const mainHeadingMatch = content.match(/#\s*(.+?)(?:\n|$)/);
+  if (mainHeadingMatch) sections.push(`Main Heading: ${mainHeadingMatch[1]}`);
+  
+  // Extract key features/tools (look for bullet points or numbered lists)
+  const featuresMatch = content.match(/(?:## Every tool you need|## Every tool you need to work with PDFs)([\s\S]*?)(?=\n\n|\n##|$)/);
+  if (featuresMatch) {
+    sections.push(`Key Features: ${featuresMatch[1].substring(0, 1000)}...`);
+  }
+  
+  // Extract tool list (look for **Tool Name** patterns)
+  const toolMatches = content.match(/\*\*([^*]+)\*\*[\\]*\n[\\]*\n([^*]+?)(?=\*\*|$)/g);
+  if (toolMatches && toolMatches.length > 0) {
+    const tools = toolMatches.slice(0, 10).map(match => {
+      const toolMatch = match.match(/\*\*([^*]+)\*\*/);
+      const descMatch = match.match(/\*\*[^*]+\*\*[\\]*\n[\\]*\n([^*]+)/);
+      return `- ${toolMatch?.[1] || 'Tool'}: ${descMatch?.[1]?.substring(0, 100) || 'Description'}...`;
+    });
+    sections.push(`Tools:\n${tools.join('\n')}`);
+  }
+  
+  // Extract footer/legal links
+  const footerMatch = content.match(/(?:Product|Resources|Solutions|Legal|Company)[\s\S]*?(?=\n\n|$)/);
+  if (footerMatch) {
+    sections.push(`Footer Links: ${footerMatch[0].substring(0, 500)}...`);
+  }
+  
+  // If no specific sections found, take the first 2000 characters
+  if (sections.length === 0) {
+    sections.push(content.substring(0, 2000) + '...');
+  }
+  
+  return sections;
+}
+
 // Helper function to analyze user preferences from conversation history
 function analyzeUserPreferences(messages: ConversationMessage[]): {
   commonPatterns: string[];
@@ -1160,6 +1235,27 @@ CRITICAL: When files are provided in the context:
                            (model === 'openai/gpt-5') ? 'gpt-5' :
                            (isGoogle ? model.replace('google/', '') : model);
 
+        // Check if content is too large and chunk if necessary
+        const estimatedTokens = (systemPrompt + fullPrompt).length / 4;
+        const isContentTooLarge = estimatedTokens > 8000;
+        
+        if (isContentTooLarge) {
+          console.log(`[generate-ai-code-stream] Content too large (${estimatedTokens} tokens), chunking...`);
+          
+          // Chunk the scraped content if it exists
+          if (context?.conversationContext?.scrapedWebsites?.length > 0) {
+            const scrapedContent = context.conversationContext.scrapedWebsites[0].content;
+            
+            // Extract key sections for website recreation
+            const keySections = extractKeySections(scrapedContent);
+            const reducedContent = keySections.join('\n\n');
+            
+            // Replace the full content with reduced content
+            fullPrompt = fullPrompt.replace(scrapedContent, reducedContent);
+            console.log(`[generate-ai-code-stream] Reduced content from ${scrapedContent.length} to ${reducedContent.length} characters`);
+          }
+        }
+
         // Make streaming API call with appropriate provider
         const streamOptions: any = {
           model: modelProvider(actualModel),
@@ -1243,7 +1339,69 @@ It's better to have 3 complete files than 10 incomplete files.`
           };
         }
         
-        const result = await streamText(streamOptions);
+        let result;
+        try {
+          result = await streamText(streamOptions);
+        } catch (error: any) {
+          // Handle token limit errors with fallback
+          if (error.message?.includes('Request too large') || error.message?.includes('tokens per minute') || error.statusCode === 413) {
+            console.log('[generate-ai-code-stream] Token limit exceeded, trying with fallback model...');
+            
+            // Try with a different model that has higher limits
+            const fallbackModel = isAnthropic ? 'anthropic/claude-3-5-sonnet-20241022' : 
+                                 isOpenAI ? 'gpt-4o' : 
+                                 isGoogle ? 'gemini-1.5-pro' : 'llama-3.1-70b-versatile';
+            
+            const fallbackProvider = isAnthropic ? anthropic : 
+                                   isOpenAI ? openai : 
+                                   isGoogle ? googleGenerativeAI : groq;
+            
+            const fallbackActualModel = isAnthropic ? fallbackModel.replace('anthropic/', '') : 
+                                   (fallbackModel === 'gpt-4o') ? 'gpt-4o' :
+                                   (isGoogle ? fallbackModel.replace('google/', '') : fallbackModel);
+            
+            console.log(`[generate-ai-code-stream] Falling back to ${fallbackModel}`);
+            
+            // Further reduce content if still too large
+            let reducedPrompt = fullPrompt;
+            if (reducedPrompt.length > 20000) {
+              reducedPrompt = reducedPrompt.substring(0, 20000) + '\n\n[Content truncated for token limits]';
+              console.log('[generate-ai-code-stream] Further reduced content for fallback model');
+            }
+            
+            const fallbackOptions = {
+              ...streamOptions,
+              model: fallbackProvider(fallbackActualModel),
+              messages: [
+                streamOptions.messages[0],
+                { 
+                  role: 'user', 
+                  content: reducedPrompt + `
+
+CRITICAL: You MUST complete EVERY file you start. If you write:
+<file path="src/components/Hero.jsx">
+
+You MUST include the closing </file> tag and ALL the code in between.
+
+NEVER write partial code like:
+<h1>Build and deploy on the AI Cloud.</h1>
+<p>Some text...</p>  ❌ WRONG
+
+ALWAYS write complete code:
+<h1>Build and deploy on the AI Cloud.</h1>
+<p>Some text here with full content</p>  ✅ CORRECT
+
+If you're running out of space, generate FEWER files but make them COMPLETE.
+It's better to have 3 complete files than 10 incomplete files.`
+                }
+              ]
+            };
+            
+            result = await streamText(fallbackOptions);
+          } else {
+            throw error;
+          }
+        }
         
         // Stream the response and parse in real-time
         let generatedCode = '';
